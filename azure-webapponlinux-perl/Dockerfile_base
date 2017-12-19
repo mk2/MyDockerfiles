@@ -1,0 +1,20 @@
+FROM perl:5.26
+
+RUN mkdir -p /home/site/wwwroot
+WORKDIR /home/site/wwwroot
+ONBUILD COPY . /home/site/wwwroot
+ONBUILD RUN cpanm --installdeps .
+ONBUILD RUN rm -rf /home/site/wwwroot
+ONBUILD RUN mkdir -p /home/site/wwwroot
+
+EXPOSE 3000 8080 2222
+
+ENV SSH_PASSWD "root:Docker!"
+RUN apt-get update \
+        && apt-get install -y --no-install-recommends dialog \
+        && apt-get update \
+		&& apt-get install -y --no-install-recommends openssh-server \
+		&& echo "$SSH_PASSWD" | chpasswd 
+COPY sshd_config /etc/ssh/
+
+CMD ["sh", "/home/site/wwwroot/init.sh"]
